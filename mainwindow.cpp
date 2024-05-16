@@ -35,23 +35,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionPrint->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_P));
     connect(ui->actionPrint, &QAction::triggered, this, &MainWindow::printFile);
 
-
-    auto menuMyAccount = ui->menubar->addMenu("My account");
-
-    //auto actionChangePassword = menuMyAccount->addAction("Change password");
-    //connect(actionChangePassword, &QAction::triggered, this, &MainWindow::changeMyPassword);
-
-    menuMyAccount->addSeparator();
-
-    auto actionLogOut = menuMyAccount->addAction("Log out");
-    connect(actionLogOut, &QAction::triggered, this, &QApplication::quit);
-
     auto menuAbout = ui->menubar->addMenu("About");
 
     auto actionAboutAuthor = menuAbout->addAction("About author");
     connect(actionAboutAuthor, &QAction::triggered, this, &MainWindow::aboutAuthor);
     auto actionUsedTechnologies = menuAbout->addAction("Used technologies");
     connect(actionUsedTechnologies, &QAction::triggered, this, &MainWindow::usedTechnologies);
+
+
+    auto actionExit = ui->menubar->addAction("Exit");
+    connect(actionExit, &QAction::triggered, this, &QApplication::quit);
 
     setWindowTitle(QString("Main Window :  (") + UNTITLED + ')');
 }
