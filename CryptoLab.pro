@@ -13,41 +13,22 @@ INCLUDEPATH += \
 
 SOURCES += \
     aboutwindow.cpp \
-    accounteditorwindow.cpp \
-    activationutils.cpp \
-    chpasswindow.cpp \
     fileinfowindow.cpp \
-    loginwindow.cpp \
     main.cpp \
     mainwindow.cpp \
-    manageaccountswindow.cpp \
-    manageusers.cpp \
-    questioncheckwindow.cpp \
     technologieswindow.cpp
 
 HEADERS += \
     aboutwindow.h \
-    accounteditorwindow.h \
-    activationutils.h \
-    chpasswindow.h \
     fileinfowindow.h \
-    loginwindow.h \
     mainwindow.h \
-    manageaccountswindow.h \
-    manageusers.h \
     pch.h \
-    questioncheckwindow.h \
     technologieswindow.h
 
 FORMS += \
     aboutwindow.ui \
-    accounteditorwindow.ui \
-    chpasswindow.ui \
     fileinfowindow.ui \
-    loginwindow.ui \
     mainwindow.ui \
-    manageaccountswindow.ui \
-    questioncheckwindow.ui \
     technologieswindow.ui
 
 # Default rules for deployment.

@@ -2,28 +2,20 @@
 #include "ui_mainwindow.h"
 #include <aboutwindow.h>
 #include <technologieswindow.h>
-#include <chpasswindow.h>
-#include <manageaccountswindow.h>
-#include <questioncheckwindow.h>
 #include <fileinfowindow.h>
-#include "activationutils.h"
 #include <pch.h>
-#include <manageusers.h>
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QProgressBar>
 #include <QThread>
 #include <QInputDialog>
 
-MainWindow::MainWindow(const QString& userName, bool activated, QWidget *parent)
+MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , m_userName(userName)
-    , m_timer(new QTimer(this))
-    , m_activated(activated)
 {
     ui->setupUi(this);
-    ui->statusbar->showMessage("User : " + m_userName);
+    //ui->statusbar->showMessage("User : " + m_userName);
 
     ui->actionNew->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::newFile);
@@ -46,21 +38,13 @@ MainWindow::MainWindow(const QString& userName, bool activated, QWidget *parent)
 
     auto menuMyAccount = ui->menubar->addMenu("My account");
 
-    auto actionChangePassword = menuMyAccount->addAction("Change password");
-    connect(actionChangePassword, &QAction::triggered, this, &MainWindow::changeMyPassword);
+    //auto actionChangePassword = menuMyAccount->addAction("Change password");
+    //connect(actionChangePassword, &QAction::triggered, this, &MainWindow::changeMyPassword);
 
     menuMyAccount->addSeparator();
 
     auto actionLogOut = menuMyAccount->addAction("Log out");
     connect(actionLogOut, &QAction::triggered, this, &QApplication::quit);
-
-    if(m_userName == ADMIN)
-    {
-        //Admin can manage profiles
-        auto actionManageAccounts = ui->menubar->addAction("Manage accounts");
-        actionManageAccounts->setShortcut(Qt::CTRL + Qt::Key_M);
-        connect(actionManageAccounts, &QAction::triggered, this, &MainWindow::manageAccounts);
-    }
 
     auto menuAbout = ui->menubar->addMenu("About");
 
@@ -69,83 +53,13 @@ MainWindow::MainWindow(const QString& userName, bool activated, QWidget *parent)
     auto actionUsedTechnologies = menuAbout->addAction("Used technologies");
     connect(actionUsedTechnologies, &QAction::triggered, this, &MainWindow::usedTechnologies);
 
-    connect(m_timer, &QTimer::timeout, this, &MainWindow::reAuthTimer);
-    m_timer->start(TIME_INTERVAL);
-
-    if(m_activated == false)
-    {
-        qDebug() << "Main Window : " + userName  + " doesn't have an activated account";
-        PLOGI <<"Main Window : " + userName  + " doesn't have an activated account";
-        //ui->actionParameters->setDisabled(true);
-        m_activateAction = ui->menubar->addAction("Activate");
-        m_activateAction->setShortcut(Qt::CTRL + Qt::Key_A);
-        connect(m_activateAction, &QAction::triggered, this, &MainWindow::activate);
-
-    }
-    else
-    {
-        qDebug() << "Main Window : " + userName  + " has an activated account";
-        PLOGI <<"Main Window : " + userName  + " has an activated account";
-    }
-
-    setWindowTitle("Main Window : " + userName  + " (" + UNTITLED + ')');
+    setWindowTitle(QString("Main Window :  (") + UNTITLED + ')');
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-    PLOGI << "Program finished : " << m_userName;
-}
-
-void MainWindow::changeMyPassword()
-{
-    PLOGI << "Main window : " << m_userName << " wants to change their password ";
-    qDebug()<<"Change password";
-    ChPassWindow chPassWindow(m_userName);
-    chPassWindow.setModal(true);
-    if(chPassWindow.exec() == QDialog::Accepted)
-    {
-        PLOGI << "Password successfully changed";
-    }
-    else
-    {
-        PLOGW << "Change password window rejected";
-    }
-}
-
-void MainWindow::activate()
-{
-    qDebug() << "Main window : " + m_userName + " tries to activate the account";
-    PLOGI << "Main window : " + m_userName + " tries to activate the account";
-
-    QFile launchCounterFile{};
-
-    if(!Activation::getActivationFile(launchCounterFile))
-    {
-        qDebug() << "Main window : Failed to open activation file";
-        PLOGI    << "Main window : Failed to open activation file";
-        return;
-    }
-
-    if(Activation::activate(launchCounterFile, m_userName, false))
-    {
-        qDebug() << "Main window : " + m_userName + " activated product";
-        PLOGI << "Main window : " + m_userName + " activated product";
-        m_activated = true;
-        // if(ManageUsers::caesarCipher(key.toStdString(), CAESAR_CIPHER_SHIFT) == encryptedKey)
-        // {
-        //     qDebug() << "The key is correct";
-        //     PLOGI << "The key is correct. Activating account";
-        //     //ManageUsers::changeProperty(m_userName, ACTIVATED, true);
-             ui->actionParameters->setDisabled(false);
-             m_activateAction->deleteLater();
-        // }
-        // else
-        // {
-        //     qDebug() << "Incorrect key";
-        //     PLOGI << "Incorrect key";
-        // }
-    }
+    PLOGI << "Program finished : ";
 }
 
 void MainWindow::openFile()
@@ -175,8 +89,8 @@ void MainWindow::openFile()
     QString filePath = QFileDialog::getOpenFileName(this, "Open file", QDir::currentPath());
     if(!filePath.isEmpty())
     {
-        qDebug() << "Main window : " << m_userName << " tries to open file : " << filePath;
-        PLOGI << "Main window : " << m_userName << " tries to open file : " << filePath;
+        qDebug() << "Main window :  tries to open file : " << filePath;
+        PLOGI << "Main window :  tries to open file : " << filePath;
         m_file.setFileName(filePath);
         if(!m_file.open(QFile::ReadOnly | QIODevice::Text | QIODevice::ExistingOnly))
         {
@@ -187,7 +101,7 @@ void MainWindow::openFile()
         }
         ui->plainTextEdit->setPlainText(m_file.readAll());
         ui->plainTextEdit->moveCursor(QTextCursor::End);
-        setWindowTitle("Main Window : " + m_userName  + " (" + QFileInfo(filePath).fileName() + ')');
+        setWindowTitle("Main Window : (" + QFileInfo(filePath).fileName() + ')');
     }
     else
     {
@@ -223,7 +137,7 @@ void MainWindow::newFile()
     ui->plainTextEdit->clear();
     m_file.close();
     m_file.setFileName("");
-    setWindowTitle("Main Window : " + m_userName  + " (" + UNTITLED + ')');
+    setWindowTitle(QString("Main Window :  (") + UNTITLED + ')');
 }
 
 void MainWindow::saveFile()
@@ -279,7 +193,7 @@ void MainWindow::saveAsFile()
     QTextStream fileStream(&m_file);
     fileStream << ui->plainTextEdit->toPlainText();
     ui->plainTextEdit->document()->setModified(false);
-    setWindowTitle("Main Window : " + m_userName  + " (" + QFileInfo(newFilePath).fileName() + ')');
+    setWindowTitle(QString("Main Window : ") + " (" + QFileInfo(newFilePath).fileName() + ')');
 }
 
 void MainWindow::parameters()
@@ -323,22 +237,12 @@ void MainWindow::printFile()
     pd.deleteLater();
 }
 
-void MainWindow::manageAccounts()
-{
-    PLOGI << "Main window : Manage accounts window called";
-    qDebug()<<"Manage accounts";
-    ManageAccountsWindow manageWindow;
-    manageWindow.setModal(true);
-    manageWindow.exec();
-}
-
 void MainWindow::aboutAuthor()
 {
     qDebug()<<"About author";
     AboutWindow aboutWindow;
     aboutWindow.setModal(true);
     aboutWindow.exec();
-    PLOGI << m_userName << " reads about author";
 }
 
 void MainWindow::usedTechnologies()
@@ -347,28 +251,4 @@ void MainWindow::usedTechnologies()
     TechnologiesWindow techWindow;
     techWindow.setModal(true);
     techWindow.exec();
-    PLOGI << m_userName << " reads about used technologies";
-}
-
-void MainWindow::reAuthTimer()
-{
-    PLOGI << "Reauthentication time";
-    qDebug() << "Re auth timer";
-    m_timer->stop();
-
-    QuestionCheckWindow questionsCheck(m_userName, ANSWER_THE_QUESTIONS);
-    if(questionsCheck.exec() == QDialog::Accepted)
-    {
-        qDebug() << "Questions check accepted";
-        PLOGI << "Questions check accepted";
-    }
-    else{
-        qDebug() << "Questions check rejected";
-        PLOGW << "Questions check rejected";
-        QMessageBox::critical(this, "Fail", "Reauthentication failed");
-        QApplication::quit();
-        return;
-    }
-
-    m_timer->start();
 }
