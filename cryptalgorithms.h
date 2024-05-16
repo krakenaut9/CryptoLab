@@ -1,7 +1,13 @@
 #pragma once
 
-class CryptAlgorithms
+#include <QString>
+#include <QStringView>
+
+class CaesarCipher
 {
 public:
-    CryptAlgorithms();
+    CaesarCipher() = default;
+
+    static QString encrypt(QStringView src, qint8 key);
+    static QString decrypt(QStringView src, qint8 key);
 };
