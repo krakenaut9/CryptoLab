@@ -1,8 +1,7 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
-#include <pch.h>
+#include <QFile>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,4 +29,3 @@ private:
     Ui::MainWindow *ui;
     QFile m_file;
 };
-#endif // MAINWINDOW_H

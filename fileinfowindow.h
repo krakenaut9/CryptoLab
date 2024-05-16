@@ -1,9 +1,6 @@
-#ifndef FILEINFOWINDOW_H
-#define FILEINFOWINDOW_H
+#pragma once
 
 #include <QDialog>
-#include <QFileInfo>
-#include <QDateTime>
 
 namespace Ui {
 class FileInfoWindow;
@@ -21,5 +18,3 @@ private:
     Ui::FileInfoWindow *ui;
     QString m_fileName;
 };
-
-#endif // FILEINFOWINDOW_H

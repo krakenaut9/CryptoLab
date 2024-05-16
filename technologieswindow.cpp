@@ -1,6 +1,7 @@
 #include "technologieswindow.h"
 #include "ui_technologieswindow.h"
 #include <pch.h>
+
 TechnologiesWindow::TechnologiesWindow(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TechnologiesWindow)

@@ -1,5 +1,4 @@
-#ifndef TECHNOLOGIESWINDOW_H
-#define TECHNOLOGIESWINDOW_H
+#pragma once
 
 #include <QDialog>
 
@@ -19,5 +18,3 @@ public slots:
 private:
     Ui::TechnologiesWindow *ui;
 };
-
-#endif // TECHNOLOGIESWINDOW_H

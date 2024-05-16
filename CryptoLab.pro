@@ -13,6 +13,7 @@ INCLUDEPATH += \
 
 SOURCES += \
     aboutwindow.cpp \
+    cryptalgorithms.cpp \
     fileinfowindow.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -20,6 +21,7 @@ SOURCES += \
 
 HEADERS += \
     aboutwindow.h \
+    cryptalgorithms.h \
     fileinfowindow.h \
     mainwindow.h \
     pch.h \

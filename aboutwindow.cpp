@@ -1,3 +1,4 @@
+#include <pch.h>
 #include "aboutwindow.h"
 #include "ui_aboutwindow.h"
 

@@ -4,11 +4,8 @@
 #include <technologieswindow.h>
 #include <fileinfowindow.h>
 #include <pch.h>
-#include <QFileDialog>
-#include <QProgressDialog>
-#include <QProgressBar>
-#include <QThread>
-#include <QInputDialog>
+
+static constexpr char kUntitledName[] = "untitled";
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -46,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto actionExit = ui->menubar->addAction("Exit");
     connect(actionExit, &QAction::triggered, this, &QApplication::quit);
 
-    setWindowTitle(QString("Main Window :  (") + UNTITLED + ')');
+    setWindowTitle(QString("Main Window :  (") + kUntitledName + ')');
 }
 
 MainWindow::~MainWindow()
@@ -130,7 +127,7 @@ void MainWindow::newFile()
     ui->plainTextEdit->clear();
     m_file.close();
     m_file.setFileName("");
-    setWindowTitle(QString("Main Window :  (") + UNTITLED + ')');
+    setWindowTitle(QString("Main Window :  (") + kUntitledName + ')');
 }
 
 void MainWindow::saveFile()
