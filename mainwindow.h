@@ -25,7 +25,13 @@ public slots:
     void parameters();
     void printFile();
 
+    void encryptButtonPressed();
+    void decryptButtonPressed();
+
+    void chosenAlgorithmChanged(int index);
+
 private:
     Ui::MainWindow *ui;
-    QFile m_file;
+    QFile m_sourceFile;
+    QFile m_resultFile;
 };
