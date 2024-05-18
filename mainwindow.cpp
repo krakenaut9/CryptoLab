@@ -30,7 +30,42 @@ static void setupCaesarKeyGroupBoxLayout(QGroupBox* gbox)
     layout->addWidget(spinBox);
 }
 
-static void setupKeyGroupBox(QGroupBox* gbox, CryptoAlgorithm algorithm = CryptoAlgorithm::CAESAR)
+static void setupTrithemiusLinearKeyGroupBoxLayout(QGroupBox* gbox)
+{
+    auto layout{ gbox->layout() };
+
+    auto spinBoxA{ new QSpinBox(gbox) };
+    layout->addWidget(spinBoxA);
+
+    auto spinBoxB{ new QSpinBox(gbox) };
+    layout->addWidget(spinBoxB);
+}
+
+static void setupTrithemiusNonlinearKeyGroupBoxLayout(QGroupBox* gbox)
+{
+    auto layout{ gbox->layout() };
+
+    auto spinBoxA{ new QSpinBox(gbox) };
+    layout->addWidget(spinBoxA);
+
+    auto spinBoxB{ new QSpinBox(gbox) };
+    layout->addWidget(spinBoxB);
+
+    auto spinBoxC{ new QSpinBox(gbox) };
+    layout->addWidget(spinBoxC);
+}
+
+static void setupTrithemiusKeywordKeyGroupBoxLayout(QGroupBox* gbox)
+{
+    auto layout{ gbox->layout() };
+
+    auto keywordLineEdit{ new QLineEdit(gbox) };
+    keywordLineEdit->setPlaceholderText("Keyword");
+
+    layout->addWidget(keywordLineEdit);
+}
+
+static void setupKeyGroupBox(QGroupBox* gbox, CryptoAlgorithm algorithm = CryptoAlgorithm::Caesar)
 {
     if(auto layout{ gbox->layout() }; layout)
     {
@@ -43,8 +78,17 @@ static void setupKeyGroupBox(QGroupBox* gbox, CryptoAlgorithm algorithm = Crypto
 
     switch (algorithm)
     {
-    case CryptoAlgorithm::CAESAR:
+    case CryptoAlgorithm::Caesar:
         setupCaesarKeyGroupBoxLayout(gbox);
+        break;
+    case CryptoAlgorithm::Trithemius_Linear:
+        setupTrithemiusLinearKeyGroupBoxLayout(gbox);
+        break;
+    case CryptoAlgorithm::Trithemius_Nonlinear:
+        setupTrithemiusNonlinearKeyGroupBoxLayout(gbox);
+        break;
+    case CryptoAlgorithm::Trithemius_Keyword:
+        setupTrithemiusKeywordKeyGroupBoxLayout(gbox);
         break;
     default:
         qDebug() << "Unknown algorithm id: " << static_cast<int>(algorithm);
@@ -98,9 +142,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->decryptButton->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
 
     setupKeyGroupBox(ui->keyGroupBox);
-
+    ui->keyGroupBox->setMaximumWidth(150);
 
     ui->algorithmComboBox->addItem("Caesar");
+    ui->algorithmComboBox->addItem("Trithemius (Linear)");
+    ui->algorithmComboBox->addItem("Trithemius (Nonlinear)");
+    ui->algorithmComboBox->addItem("Trithemius (Keyword)");
     //ui->algorithmComboBox->addItem("Test");
     connect(ui->algorithmComboBox, &QComboBox::currentIndexChanged, this, &MainWindow::chosenAlgorithmChanged);
 
@@ -283,13 +330,60 @@ void MainWindow::encryptButtonPressed()
 
     auto keyGroupBoxChildren{ ui->keyGroupBox->children() };
     auto algorithm{ static_cast<CryptoAlgorithm>(ui->algorithmComboBox->currentIndex()) };
+
     qDebug() << "Children count: " << keyGroupBoxChildren.size();
-    if(algorithm == CryptoAlgorithm::CAESAR)
+
+    if(algorithm == CryptoAlgorithm::Caesar)
     {
         auto spinBox{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
         assert(spinBox);
         qDebug() << spinBox->value();
         auto encryptedText{ CaesarCipher::encrypt(sourceText, spinBox->value()) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
+    else if(algorithm == CryptoAlgorithm::Trithemius_Linear)
+    {
+        auto spinBoxA{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
+        assert(spinBox);
+        qDebug() << spinBoxA->value();
+
+        auto spinBoxB{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(2)) };
+        assert(spinBoxB);
+        qDebug() << spinBoxB->value();
+
+        TrithemiusCipher cipher{ { spinBoxA->value(), spinBoxB->value() }, TrithemiusCipher::CipherType::LINEAR };
+
+        auto encryptedText{cipher.encrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
+    else if(algorithm == CryptoAlgorithm::Trithemius_Nonlinear)
+    {
+        auto spinBoxA{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
+        assert(spinBox);
+        qDebug() << spinBoxA->value();
+
+        auto spinBoxB{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(2)) };
+        assert(spinBoxB);
+        qDebug() << spinBoxB->value();
+
+        auto spinBoxC{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(3)) };
+        assert(spinBoxC);
+        qDebug() << spinBoxC->value();
+
+        TrithemiusCipher cipher{ { spinBoxA->value(), spinBoxB->value(), spinBoxC->value() }, TrithemiusCipher::CipherType::NONLINEAR };
+
+        auto encryptedText{cipher.encrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
+    else if(algorithm == CryptoAlgorithm::Trithemius_Keyword)
+    {
+        auto keywordLineEdit{ qobject_cast<QLineEdit*>(keyGroupBoxChildren.at(1)) };
+        assert(keywordLineEdit);
+        qDebug() << keywordLineEdit->text();
+
+        TrithemiusCipher cipher{ keywordLineEdit->text() };
+
+        auto encryptedText{ cipher.encrypt(sourceText) };
         ui->destinationPlainTextEdit->setPlainText(encryptedText);
     }
 }
@@ -308,13 +402,60 @@ void MainWindow::decryptButtonPressed()
     auto keyGroupBoxChildren{ ui->keyGroupBox->children() };
     auto algorithm{ static_cast<CryptoAlgorithm>(ui->algorithmComboBox->currentIndex()) };
     qDebug() << "Children count: " << keyGroupBoxChildren.size();
-    if(algorithm == CryptoAlgorithm::CAESAR)
+    if(algorithm == CryptoAlgorithm::Caesar)
     {
         auto spinBox{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
         assert(spinBox);
         qDebug() << spinBox->value();
         auto decryptedText{ CaesarCipher::decrypt(sourceText, spinBox->value()) };
         ui->destinationPlainTextEdit->setPlainText(decryptedText);
+    }
+    else if(algorithm == CryptoAlgorithm::Trithemius_Linear)
+    {
+        auto spinBoxA{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
+        assert(spinBox);
+        qDebug() << spinBoxA->value();
+
+        auto spinBoxB{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(2)) };
+        assert(spinBoxB);
+        qDebug() << spinBoxB->value();
+
+        TrithemiusCipher cipher{ { spinBoxA->value(), spinBoxB->value() }, TrithemiusCipher::CipherType::LINEAR };
+
+        auto encryptedText{cipher.decrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
+    else if(algorithm == CryptoAlgorithm::Trithemius_Nonlinear)
+    {
+        auto spinBoxA{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
+        assert(spinBox);
+        qDebug() << spinBoxA->value();
+
+        auto spinBoxB{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(2)) };
+        assert(spinBoxB);
+        qDebug() << spinBoxB->value();
+
+        auto spinBoxC{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(3)) };
+        assert(spinBoxC);
+        qDebug() << spinBoxC->value();
+
+        TrithemiusCipher cipher{ { spinBoxA->value(), spinBoxB->value(), spinBoxC->value() }, TrithemiusCipher::CipherType::NONLINEAR };
+
+        auto encryptedText{cipher.decrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
+    else if(algorithm == CryptoAlgorithm::Trithemius_Keyword)
+    {
+        auto keywordLineEdit{ qobject_cast<QLineEdit*>(keyGroupBoxChildren.at(1)) };
+        assert(keywordLineEdit);
+        qDebug() << keywordLineEdit->text();
+
+        auto keyword{ keywordLineEdit->text() };
+
+        TrithemiusCipher cipher{ keyword };
+
+        auto encryptedText{ cipher.decrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
     }
 }
 

@@ -21,6 +21,8 @@
 #include <QProgressBar>
 #include <QThread>
 #include <QSpinBox>
+#include <QVector>
+#include <QList>
 
 #include <plog/Log.h>
 #include <plog/Initializers/RollingFileInitializer.h>
