@@ -147,8 +147,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->sourcePlainTextEdit->setPlaceholderText("Your text to process. Press Encrypt button or CTRL+E to encrypt text and Decrypt button or CTRL+D to decrypt.");
     ui->destinationPlainTextEdit->setPlaceholderText("Processed text");
-
-
+    connect(ui->swapButton, &QPushButton::released, this, &MainWindow::swapPlainTexts);
 
     connect(ui->encryptButton, &QPushButton::released, this, &MainWindow::encryptButtonPressed);
     connect(ui->decryptButton, &QPushButton::released, this, &MainWindow::decryptButtonPressed);

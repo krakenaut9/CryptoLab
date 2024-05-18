@@ -48,7 +48,7 @@
         <item>
          <widget class="QPushButton" name="swapButton">
           <property name="text">
-           <string>⇦ Swap ⇨</string>
+           <string>⇄ Swap</string>
           </property>
          </widget>
         </item>
