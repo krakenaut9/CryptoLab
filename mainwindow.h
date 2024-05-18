@@ -31,6 +31,8 @@ public slots:
     void chosenAlgorithmChanged(int index);
 
     void swapPlainTexts();
+    void clearSourcePlainText();
+    void clearResultPlainText();
 
 private:
     Ui::MainWindow *ui;

@@ -70,19 +70,20 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_6">
+         <layout class="QVBoxLayout" name="sourceVerticalLayout">
           <item>
-           <widget class="QLabel" name="label_3">
-            <property name="layoutDirection">
-             <enum>Qt::LeftToRight</enum>
-            </property>
-            <property name="text">
-             <string>Source</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Source</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <widget class="QPlainTextEdit" name="sourcePlainTextEdit">
@@ -94,24 +95,42 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="sourceClearPushButton">
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_5">
+         <layout class="QVBoxLayout" name="resultVerticalLayout">
           <item>
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Result</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Result</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <widget class="QPlainTextEdit" name="destinationPlainTextEdit">
             <property name="readOnly">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="resultClearPushButton">
+            <property name="text">
+             <string>Clear</string>
             </property>
            </widget>
           </item>

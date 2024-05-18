@@ -1,5 +1,8 @@
 #include <pch.h>
 #include "cryptalgorithms.h"
+#include <cryptopp/osrng.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/hex.h>
 
 static inline int positiveModulo(int base, int mod)
 {
@@ -14,9 +17,9 @@ void CaesarCipher::tryEncryptChar(QChar& ch, QStringView symbols, qint8 key)
     }
 }
 
-QString CaesarCipher::encrypt(QStringView src, qint8 key)
+QString CaesarCipher::encrypt(QStringView sourceText, qint8 key)
 {
-    QString result{ src.toString() };
+    QString result{ sourceText.toString() };
 
     for(auto& ch : result)
     {
@@ -28,9 +31,9 @@ QString CaesarCipher::encrypt(QStringView src, qint8 key)
     return result;
 }
 
-QString CaesarCipher::decrypt(QStringView src, qint8 key)
+QString CaesarCipher::decrypt(QStringView encryptedText, qint8 key)
 {
-    return encrypt(src, -key);
+    return encrypt(encryptedText, -key);
 }
 
 TrithemiusCipher::TrithemiusCipher(QVector<int> coefficients, CipherType type)
@@ -39,25 +42,25 @@ TrithemiusCipher::TrithemiusCipher(QVector<int> coefficients, CipherType type)
 TrithemiusCipher::TrithemiusCipher(QStringView keyword)
     : m_keyword(keyword.toString()), m_type(CipherType::KEYWORD) {}
 
-QString TrithemiusCipher::encrypt(QStringView src)
+QString TrithemiusCipher::encrypt(QStringView sourceText)
 {
-    QString ciphertext{ src.size(), '\0' };
+    QString ciphertext{ sourceText.size(), '\0' };
 
-    for (qsizetype i{ 0 }; i < src.size(); ++i)
+    for (qsizetype i{ 0 }; i < sourceText.size(); ++i)
     {
-        ciphertext[i] = encryptChar(src[i], i);
+        ciphertext[i] = encryptChar(sourceText[i], i);
     }
 
     return ciphertext;
 }
 
-QString TrithemiusCipher::decrypt(QStringView src)
+QString TrithemiusCipher::decrypt(QStringView encryptedText)
 {
-    QString plaintext{ src.size(), '\0' };
+    QString plaintext{ encryptedText.size(), '\0' };
 
-    for (qsizetype i{ 0 }; i < src.size(); ++i)
+    for (qsizetype i{ 0 }; i < encryptedText.size(); ++i)
     {
-        plaintext[i] = decryptChar(src[i], i);
+        plaintext[i] = decryptChar(encryptedText[i], i);
     }
 
     return plaintext;
@@ -69,7 +72,7 @@ QChar TrithemiusCipher::encryptChar(QChar c, int pos)
 
     if (index == -1)
     {
-        return c; // Return the original character if it's not in the supported symbols
+        return c;
     }
 
     auto shift{ calculateShift(pos) };
@@ -84,7 +87,7 @@ QChar TrithemiusCipher::decryptChar(QChar c, int pos)
 
     if (index == -1)
     {
-        return c; // Return the original character if it's not in the supported symbols
+        return c;
     }
 
     auto shift{ calculateShift(pos) };
@@ -117,32 +120,86 @@ qsizetype TrithemiusCipher::calculateShift(qsizetype pos)
 
 GammaCipher::GammaCipher(QStringView key) : m_gamma{ key.toString() } {}
 
-QString GammaCipher::encrypt(QStringView plainText)
+QString GammaCipher::encrypt(QStringView sourceText)
 {
-    QString cipherText;
+    QString encryptedText{ sourceText.size(), '\0' };;
 
-    for (int i = 0; i < plainText.size(); ++i)
+    for (qsizetype i{ 0 }; i < sourceText.size(); ++i)
     {
-        int x = kSupportedSymbols.indexOf(plainText.at(i));
+        int x = kSupportedSymbols.indexOf(sourceText.at(i));
         int g = kSupportedSymbols.indexOf(m_gamma.at(i % m_gamma.size()));
         int y = (x + g) % kSupportedSymbols.size();
-        cipherText.append(kSupportedSymbols.at(y));
+        encryptedText[i] = kSupportedSymbols.at(y);
     }
 
-    return cipherText;
+    return encryptedText;
 }
 
-QString GammaCipher::decrypt(QStringView cipherText)
+QString GammaCipher::decrypt(QStringView encryptedText)
 {
-    QString plainText;
+    QString plainText{ encryptedText.size(), '\0' };
 
-    for (int i = 0; i < cipherText.size(); ++i)
+    for (qsizetype i{ 0 }; i < encryptedText.size(); ++i)
     {
-        int y = kSupportedSymbols.indexOf(cipherText.at(i));
+        int y = kSupportedSymbols.indexOf(encryptedText.at(i));
         int g = kSupportedSymbols.indexOf(m_gamma.at(i % m_gamma.size()));
         int x = (y - g + kSupportedSymbols.size()) % kSupportedSymbols.size();
-        plainText.append(kSupportedSymbols.at(x));
+        plainText[i] = kSupportedSymbols.at(x);
     }
 
     return plainText;
+}
+
+
+DESCipher::DESCipher(QStringView key)
+{
+    auto keyByteArray{ key.toLocal8Bit() };
+    memcpy(&m_iv, keyByteArray.data(), CryptoPP::DES_EDE2::BLOCKSIZE);
+    m_keyByteBlock = CryptoPP::SecByteBlock(reinterpret_cast<const CryptoPP::byte*>(keyByteArray.data()), keyByteArray.size());
+}
+
+QString DESCipher::encrypt(const QString& sourceText)
+{
+    std::string encryptedText{};
+
+    try
+    {
+        CryptoPP::CBC_Mode<CryptoPP::DES_EDE2>::Encryption e;
+        e.SetKeyWithIV(m_keyByteBlock, m_keyByteBlock.size(), m_iv);
+        CryptoPP::StringSource ss1{ sourceText.toStdString(), true, new CryptoPP::StreamTransformationFilter(e, new CryptoPP::StringSink(encryptedText) ) };
+    }
+    catch(const CryptoPP::Exception& e)
+    {
+        qDebug() << "Exception while encrypting using DES: " << e.what();
+    }
+
+    std::string encodedEncryptedText{};
+
+    CryptoPP::StringSource ss2{ encryptedText, true, new CryptoPP::HexEncoder(new CryptoPP::StringSink(encodedEncryptedText)) };
+
+    return QString::fromStdString(encodedEncryptedText);
+}
+
+QString DESCipher::decrypt(const QString& encryptedText)
+{
+    std::string decodedEncryptedText{};
+    CryptoPP::StringSource ss2{ encryptedText.toStdString(), true, new CryptoPP::HexDecoder( new CryptoPP::StringSink(decodedEncryptedText) ) };
+
+    std::string decrypted{};
+
+    try
+    {
+        CryptoPP::CBC_Mode<CryptoPP::DES_EDE2>::Decryption d;
+        d.SetKeyWithIV(m_keyByteBlock, m_keyByteBlock.size(), m_iv);
+
+        CryptoPP::StringSource ss3{ decodedEncryptedText, true, new CryptoPP::StreamTransformationFilter(d, new CryptoPP::StringSink(decrypted) ) }; // StringSource
+
+        qDebug() << "recovered text: " << decrypted;
+    }
+    catch(const CryptoPP::Exception& e)
+    {
+        qDebug() << "Exception while decrypting using DES: " << e.what();
+    }
+
+    return QString::fromStdString(decrypted);
 }

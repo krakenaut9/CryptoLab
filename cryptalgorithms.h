@@ -3,7 +3,7 @@
 #include <QString>
 #include <QStringView>
 #include <QVector>
-
+#include <cryptopp/des.h>
 static inline QString kEngSupportedSymbols{ "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" };
 static inline QString kUkrSupportedSymbols{ "АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯабвгґдеєжзиіїйклмнопрстуфхцчшщьюя" };
 static inline QString kOtherSupportedSymbols{ " ~`!@\"№#$;%^:&?*()-+={}[]\\|/<>\',.1234567890" };
@@ -18,6 +18,7 @@ enum class CryptoAlgorithm : quint8
     Trithemius_Nonlinear,
     Trithemius_Keyword,
     Gamma,
+    DES,
 };
 
 class CaesarCipher
@@ -25,8 +26,8 @@ class CaesarCipher
 public:
     CaesarCipher() = delete;
 
-    static QString encrypt(QStringView src, qint8 key);
-    static QString decrypt(QStringView src, qint8 key);
+    static QString encrypt(QStringView sourceText, qint8 key);
+    static QString decrypt(QStringView encryptedText, qint8 key);
 
 private:
     static void tryEncryptChar(QChar& ch, QStringView symbols, qint8 key);
@@ -45,8 +46,8 @@ public:
     TrithemiusCipher(QVector<int> coefficients, CipherType type);
     TrithemiusCipher(QStringView src);
 
-    QString encrypt(QStringView src);
-    QString decrypt(QStringView src);
+    QString encrypt(QStringView sourceText);
+    QString decrypt(QStringView encryptedText);
 
 private:
     QChar encryptChar(QChar c, int pos);
@@ -64,9 +65,21 @@ private:
 class GammaCipher {
 public:
     GammaCipher(QStringView key);
-    QString encrypt(QStringView plainText);
-    QString decrypt(QStringView cipherText);
+    QString encrypt(QStringView sourceText);
+    QString decrypt(QStringView encryptedText);
 
 private:
     QString m_gamma;
+};
+
+class DESCipher {
+public:
+    DESCipher(QStringView key);
+
+    QString encrypt(const QString& sourceText);
+    QString decrypt(const QString& encryptedText);
+
+private:
+    CryptoPP::byte m_iv[CryptoPP::DES_EDE2::BLOCKSIZE]{};
+    CryptoPP::SecByteBlock m_keyByteBlock{};
 };

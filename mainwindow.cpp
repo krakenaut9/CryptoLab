@@ -6,6 +6,9 @@
 #include <pch.h>
 #include <QRadioButton>
 #include <cryptalgorithms.h>
+#include <cryptopp/des.h>
+#include <cryptopp/hex.h>
+#include <cryptopp/filters.h>
 
 static constexpr char kUntitledName[] = "untitled";
 
@@ -65,7 +68,7 @@ static void setupTrithemiusKeywordKeyGroupBoxLayout(QGroupBox* gbox)
     layout->addWidget(keywordLineEdit);
 }
 
-static void setupTrithemiusGammaKeyGroupBoxLayout(QGroupBox* gbox)
+static void setupGammaKeyGroupBoxLayout(QGroupBox* gbox)
 {
     auto layout{ gbox->layout() };
 
@@ -73,6 +76,18 @@ static void setupTrithemiusGammaKeyGroupBoxLayout(QGroupBox* gbox)
     GammaLineEdit->setPlaceholderText("Gamma");
 
     layout->addWidget(GammaLineEdit);
+}
+
+static void setupDESKeyGroupBoxLayout(QGroupBox* gbox)
+{
+    auto layout{ gbox->layout() };
+
+    auto keyLineEdit{ new QLineEdit(gbox) };
+    keyLineEdit->setPlaceholderText("Key (16 characters)");
+    keyLineEdit->setMaxLength(CryptoPP::DES_EDE2::BLOCKSIZE * 2);
+    keyLineEdit->setToolTip("Key length must be 16 bytes long");
+
+    layout->addWidget(keyLineEdit);
 }
 
 static void setupKeyGroupBox(QGroupBox* gbox, CryptoAlgorithm algorithm = CryptoAlgorithm::Caesar)
@@ -101,7 +116,10 @@ static void setupKeyGroupBox(QGroupBox* gbox, CryptoAlgorithm algorithm = Crypto
         setupTrithemiusKeywordKeyGroupBoxLayout(gbox);
         break;
     case CryptoAlgorithm::Gamma:
-        setupTrithemiusGammaKeyGroupBoxLayout(gbox);
+        setupGammaKeyGroupBoxLayout(gbox);
+        break;
+    case CryptoAlgorithm::DES:
+        setupDESKeyGroupBoxLayout(gbox);
         break;
     default:
         qDebug() << "Unknown algorithm id: " << static_cast<int>(algorithm);
@@ -148,6 +166,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->sourcePlainTextEdit->setPlaceholderText("Your text to process. Press Encrypt button or CTRL+E to encrypt text and Decrypt button or CTRL+D to decrypt.");
     ui->destinationPlainTextEdit->setPlaceholderText("Processed text");
     connect(ui->swapButton, &QPushButton::released, this, &MainWindow::swapPlainTexts);
+    connect(ui->sourceClearPushButton, &QPushButton::released, this, &MainWindow::clearSourcePlainText);
+    connect(ui->resultClearPushButton, &QPushButton::released, this, &MainWindow::clearResultPlainText);
 
     connect(ui->encryptButton, &QPushButton::released, this, &MainWindow::encryptButtonPressed);
     connect(ui->decryptButton, &QPushButton::released, this, &MainWindow::decryptButtonPressed);
@@ -162,10 +182,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->algorithmComboBox->addItem("Trithemius (Nonlinear)");
     ui->algorithmComboBox->addItem("Trithemius (Keyword)");
     ui->algorithmComboBox->addItem("Gamma");
+    ui->algorithmComboBox->addItem("DES");
     //ui->algorithmComboBox->addItem("Test");
     connect(ui->algorithmComboBox, &QComboBox::currentIndexChanged, this, &MainWindow::chosenAlgorithmChanged);
 
-    setWindowTitle(QString("Main Window :  (") + kUntitledName + ')');
+    setWindowTitle(QString("CryptoLab :  (") + kUntitledName + ')');
 }
 
 MainWindow::~MainWindow()
@@ -194,7 +215,7 @@ void MainWindow::openFile()
         }
         ui->sourcePlainTextEdit->setPlainText(m_sourceFile.readAll());
         //ui->sourcePlainTextEdit->moveCursor(QTextCursor::End);
-        setWindowTitle("Main Window : (" + QFileInfo(filePath).fileName() + ')');
+        setWindowTitle("CryptoLab : (" + QFileInfo(filePath).fileName() + ')');
     }
     else
     {
@@ -212,7 +233,7 @@ void MainWindow::newFile()
     ui->sourcePlainTextEdit->clear();
     m_sourceFile.close();
     m_sourceFile.setFileName("");
-    setWindowTitle(QString("Main Window :  (") + kUntitledName + ')');
+    setWindowTitle(QString("CryptoLab :  (") + kUntitledName + ')');
 }
 
 void MainWindow::saveFile()
@@ -411,6 +432,25 @@ void MainWindow::encryptButtonPressed()
         auto encryptedText{ cipher.encrypt(sourceText) };
         ui->destinationPlainTextEdit->setPlainText(encryptedText);
     }
+    else if(algorithm == CryptoAlgorithm::DES)
+    {
+        auto keyLineEdit{ qobject_cast<QLineEdit*>(keyGroupBoxChildren.at(1)) };
+        assert(keyLineEdit);
+        qDebug() << keyLineEdit->text();
+
+        auto key{ keyLineEdit->text() };
+        if(key.length() != CryptoPP::DES_EDE2::BLOCKSIZE * 2)
+        {
+            QMessageBox::warning(this, "No file", "DES key must be 16 bytes long");
+            return;
+        }
+
+        DESCipher cipher{ key };
+
+        auto encryptedText{ cipher.encrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
+
 }
 
 void MainWindow::decryptButtonPressed()
@@ -493,6 +533,24 @@ void MainWindow::decryptButtonPressed()
         auto encryptedText{ cipher.decrypt(sourceText) };
         ui->destinationPlainTextEdit->setPlainText(encryptedText);
     }
+    else if(algorithm == CryptoAlgorithm::DES)
+    {
+        auto keyLineEdit{ qobject_cast<QLineEdit*>(keyGroupBoxChildren.at(1)) };
+        assert(keyLineEdit);
+        qDebug() << keyLineEdit->text();
+
+        auto key{ keyLineEdit->text() };
+        if(key.length() != CryptoPP::DES_EDE2::BLOCKSIZE * 2)
+        {
+            QMessageBox::warning(this, "No file", "DES key must be 16 bytes long");
+            return;
+        }
+
+        DESCipher cipher{ key };
+
+        auto encryptedText{ cipher.decrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
 }
 
 void MainWindow::chosenAlgorithmChanged(int index)
@@ -508,4 +566,15 @@ void MainWindow::swapPlainTexts()
     auto srcText{ ui->sourcePlainTextEdit->toPlainText() };
     ui->sourcePlainTextEdit->setPlainText(ui->destinationPlainTextEdit->toPlainText());
     ui->destinationPlainTextEdit->setPlainText(srcText);
+}
+
+
+void MainWindow::clearSourcePlainText()
+{
+    ui->sourcePlainTextEdit->clear();
+}
+
+void MainWindow::clearResultPlainText()
+{
+    ui->destinationPlainTextEdit->clear();
 }
