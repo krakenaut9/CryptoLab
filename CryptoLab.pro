@@ -11,6 +11,30 @@ CONFIG += c++17
 INCLUDEPATH += \
     $$PWD\plog\include \
 
+# Устанавливаем базовый путь к библиотеке Crypto++
+CRYPTOPP_PATH = $$PWD\cryptopp
+
+CRYPTOPP_ARCH = ""
+
+contains(QMAKE_TARGET.arch, x86_64) {
+    CRYPTOPP_ARCH = "x64"
+} else {
+    CRYPTOPP_ARCH = "Win32"
+}
+
+CRYPTOPP_BUILD = ""
+
+ CONFIG(debug, debug|release) {
+     CRYPTOPP_BUILD = "Debug"
+ } else {
+     CRYPTOPP_BUILD = "Release"
+ }
+
+INCLUDEPATH += CRYPTOPP_PATH
+
+LIBS += -L$$CRYPTOPP_PATH/$$CRYPTOPP_ARCH/Output/$$CRYPTOPP_BUILD -lcryptlib
+
+
 SOURCES += \
     aboutwindow.cpp \
     cryptalgorithms.cpp \
