@@ -30,6 +30,8 @@ public slots:
 
     void chosenAlgorithmChanged(int index);
 
+    void swapPlainTexts();
+
 private:
     Ui::MainWindow *ui;
     QFile m_sourceFile;

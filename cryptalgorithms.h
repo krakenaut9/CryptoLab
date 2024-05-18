@@ -17,6 +17,7 @@ enum class CryptoAlgorithm : quint8
     Trithemius_Linear,
     Trithemius_Nonlinear,
     Trithemius_Keyword,
+    Gamma,
 };
 
 class CaesarCipher
@@ -56,4 +57,16 @@ private:
     QVector<int> m_coefficients;
     QString m_keyword;
     CipherType m_type;
+};
+
+
+
+class GammaCipher {
+public:
+    GammaCipher(QStringView key);
+    QString encrypt(QStringView plainText);
+    QString decrypt(QStringView cipherText);
+
+private:
+    QString m_gamma;
 };

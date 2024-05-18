@@ -65,6 +65,16 @@ static void setupTrithemiusKeywordKeyGroupBoxLayout(QGroupBox* gbox)
     layout->addWidget(keywordLineEdit);
 }
 
+static void setupTrithemiusGammaKeyGroupBoxLayout(QGroupBox* gbox)
+{
+    auto layout{ gbox->layout() };
+
+    auto GammaLineEdit{ new QLineEdit(gbox) };
+    GammaLineEdit->setPlaceholderText("Gamma");
+
+    layout->addWidget(GammaLineEdit);
+}
+
 static void setupKeyGroupBox(QGroupBox* gbox, CryptoAlgorithm algorithm = CryptoAlgorithm::Caesar)
 {
     if(auto layout{ gbox->layout() }; layout)
@@ -89,6 +99,9 @@ static void setupKeyGroupBox(QGroupBox* gbox, CryptoAlgorithm algorithm = Crypto
         break;
     case CryptoAlgorithm::Trithemius_Keyword:
         setupTrithemiusKeywordKeyGroupBoxLayout(gbox);
+        break;
+    case CryptoAlgorithm::Gamma:
+        setupTrithemiusGammaKeyGroupBoxLayout(gbox);
         break;
     default:
         qDebug() << "Unknown algorithm id: " << static_cast<int>(algorithm);
@@ -134,7 +147,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->sourcePlainTextEdit->setPlaceholderText("Your text to process. Press Encrypt button or CTRL+E to encrypt text and Decrypt button or CTRL+D to decrypt.");
     ui->destinationPlainTextEdit->setPlaceholderText("Processed text");
-    ui->destinationPlainTextEdit->
+
+
 
     connect(ui->encryptButton, &QPushButton::released, this, &MainWindow::encryptButtonPressed);
     connect(ui->decryptButton, &QPushButton::released, this, &MainWindow::decryptButtonPressed);
@@ -148,6 +162,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->algorithmComboBox->addItem("Trithemius (Linear)");
     ui->algorithmComboBox->addItem("Trithemius (Nonlinear)");
     ui->algorithmComboBox->addItem("Trithemius (Keyword)");
+    ui->algorithmComboBox->addItem("Gamma");
     //ui->algorithmComboBox->addItem("Test");
     connect(ui->algorithmComboBox, &QComboBox::currentIndexChanged, this, &MainWindow::chosenAlgorithmChanged);
 
@@ -344,7 +359,7 @@ void MainWindow::encryptButtonPressed()
     else if(algorithm == CryptoAlgorithm::Trithemius_Linear)
     {
         auto spinBoxA{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
-        assert(spinBox);
+        assert(spinBoxA);
         qDebug() << spinBoxA->value();
 
         auto spinBoxB{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(2)) };
@@ -359,7 +374,7 @@ void MainWindow::encryptButtonPressed()
     else if(algorithm == CryptoAlgorithm::Trithemius_Nonlinear)
     {
         auto spinBoxA{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
-        assert(spinBox);
+        assert(spinBoxA);
         qDebug() << spinBoxA->value();
 
         auto spinBoxB{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(2)) };
@@ -382,6 +397,17 @@ void MainWindow::encryptButtonPressed()
         qDebug() << keywordLineEdit->text();
 
         TrithemiusCipher cipher{ keywordLineEdit->text() };
+
+        auto encryptedText{ cipher.encrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
+    else if(algorithm == CryptoAlgorithm::Gamma)
+    {
+        auto gammaLineEdit{ qobject_cast<QLineEdit*>(keyGroupBoxChildren.at(1)) };
+        assert(gammaLineEdit);
+        qDebug() << gammaLineEdit->text();
+
+        GammaCipher cipher{ gammaLineEdit->text() };
 
         auto encryptedText{ cipher.encrypt(sourceText) };
         ui->destinationPlainTextEdit->setPlainText(encryptedText);
@@ -413,7 +439,7 @@ void MainWindow::decryptButtonPressed()
     else if(algorithm == CryptoAlgorithm::Trithemius_Linear)
     {
         auto spinBoxA{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
-        assert(spinBox);
+        assert(spinBoxA);
         qDebug() << spinBoxA->value();
 
         auto spinBoxB{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(2)) };
@@ -428,7 +454,7 @@ void MainWindow::decryptButtonPressed()
     else if(algorithm == CryptoAlgorithm::Trithemius_Nonlinear)
     {
         auto spinBoxA{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(1)) };
-        assert(spinBox);
+        assert(spinBoxA);
         qDebug() << spinBoxA->value();
 
         auto spinBoxB{ qobject_cast<QSpinBox*>(keyGroupBoxChildren.at(2)) };
@@ -457,10 +483,30 @@ void MainWindow::decryptButtonPressed()
         auto encryptedText{ cipher.decrypt(sourceText) };
         ui->destinationPlainTextEdit->setPlainText(encryptedText);
     }
+    else if(algorithm == CryptoAlgorithm::Gamma)
+    {
+        auto gammaLineEdit{ qobject_cast<QLineEdit*>(keyGroupBoxChildren.at(1)) };
+        assert(gammaLineEdit);
+        qDebug() << gammaLineEdit->text();
+
+        GammaCipher cipher{ gammaLineEdit->text() };
+
+        auto encryptedText{ cipher.decrypt(sourceText) };
+        ui->destinationPlainTextEdit->setPlainText(encryptedText);
+    }
 }
 
 void MainWindow::chosenAlgorithmChanged(int index)
 {
     auto algorithm{ static_cast<CryptoAlgorithm>(index) };
     setupKeyGroupBox(ui->keyGroupBox, algorithm);
+}
+
+void MainWindow::swapPlainTexts()
+{
+    qDebug() << "Swap plain texts button pressed";
+
+    auto srcText{ ui->sourcePlainTextEdit->toPlainText() };
+    ui->sourcePlainTextEdit->setPlainText(ui->destinationPlainTextEdit->toPlainText());
+    ui->destinationPlainTextEdit->setPlainText(srcText);
 }

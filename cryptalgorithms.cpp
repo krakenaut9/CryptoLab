@@ -112,3 +112,37 @@ qsizetype TrithemiusCipher::calculateShift(qsizetype pos)
 
     return shift % kSupportedSymbols.size();
 }
+
+
+
+GammaCipher::GammaCipher(QStringView key) : m_gamma{ key.toString() } {}
+
+QString GammaCipher::encrypt(QStringView plainText)
+{
+    QString cipherText;
+
+    for (int i = 0; i < plainText.size(); ++i)
+    {
+        int x = kSupportedSymbols.indexOf(plainText.at(i));
+        int g = kSupportedSymbols.indexOf(m_gamma.at(i % m_gamma.size()));
+        int y = (x + g) % kSupportedSymbols.size();
+        cipherText.append(kSupportedSymbols.at(y));
+    }
+
+    return cipherText;
+}
+
+QString GammaCipher::decrypt(QStringView cipherText)
+{
+    QString plainText;
+
+    for (int i = 0; i < cipherText.size(); ++i)
+    {
+        int y = kSupportedSymbols.indexOf(cipherText.at(i));
+        int g = kSupportedSymbols.indexOf(m_gamma.at(i % m_gamma.size()));
+        int x = (y - g + kSupportedSymbols.size()) % kSupportedSymbols.size();
+        plainText.append(kSupportedSymbols.at(x));
+    }
+
+    return plainText;
+}
